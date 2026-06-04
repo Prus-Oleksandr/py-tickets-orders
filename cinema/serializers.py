@@ -149,6 +149,10 @@ class TicketSerializer(serializers.ModelSerializer):
         fields = ("id", "row", "seat", "movie_session")
 
 
+class TicketDetailSerializer(TicketSerializer):
+    movie_session = MovieSessionListSerializer(read_only=True)
+
+
 class OrdersSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(
         many=True,
@@ -159,6 +163,12 @@ class OrdersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ("id", "tickets", "created_at")
+
+    def to_representation(self, instance: Order) -> Dict[str, Any]:
+        self.fields["tickets"] = TicketDetailSerializer(
+            many=True, read_only=True
+        )
+        return super().to_representation(instance)
 
     def create(self, validated_data: Dict[str, Any]) -> Order:
         with transaction.atomic():
