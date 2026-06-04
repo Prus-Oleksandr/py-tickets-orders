@@ -57,12 +57,12 @@ class MovieViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(title__icontains=title)
 
         if genres:
-            genre_names = [g.strip() for g in genres.split(",")]
-            queryset = queryset.filter(genres__name__in=genre_names)
+            genre_ids = [int(str_id) for str_id in genres.split(",")]
+            queryset = queryset.filter(genres__id__in=genre_ids)
 
         if actors:
-            actor_names = [a.strip() for a in actors.split(",")]
-            queryset = queryset.filter(actors__full_name__in=actor_names)
+            actor_ids = [int(str_id) for str_id in actors.split(",")]
+            queryset = queryset.filter(actors__id__in=actor_ids)
 
         if self.action in ("list", "retrieve"):
             queryset = queryset.prefetch_related("genres", "actors")
