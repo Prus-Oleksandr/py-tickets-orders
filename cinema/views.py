@@ -6,7 +6,6 @@ from django.db.models import (
     QuerySet,
 )
 from rest_framework import viewsets
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 
 from cinema.models import (
@@ -61,12 +60,12 @@ class MovieViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(title__icontains=title)
 
         if genres:
-            genres_ids = [int(str_id) for str_id in genres.split(",")]
-            queryset = queryset.filter(genres__id__in=genres_ids)
+            genres_names = genres.split(",")
+            queryset = queryset.filter(genres__name__in=genres_names)
 
         if actors:
-            actors_ids = [int(str_id) for str_id in actors.split(",")]
-            queryset = queryset.filter(actors__id__in=actors_ids)
+            actors_names = actors.split(",")
+            queryset = queryset.filter(actors__full_name__in=actors_names)
 
         if self.action in ("list", "retrieve"):
             queryset = queryset.prefetch_related("genres", "actors")
@@ -94,7 +93,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         movie_id = self.request.query_params.get("movie")
 
         if date:
-            queryset = queryset.filter(show_time__date=date)
+            queryset = queryset.filter(show_time=date)
 
         if movie_id:
             queryset = queryset.filter(movie_id=movie_id)
@@ -128,15 +127,11 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    class OrderPagination(LimitOffsetPagination):
-        default_limit = 10
-        max_limit = 100
-
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie"
     )
     serializer_class = OrdersSerializer
-    pagination_class = OrderPagination
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self) -> QuerySet:
         return Order.objects.filter(
