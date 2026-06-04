@@ -70,13 +70,20 @@ class MovieViewSet(viewsets.ModelViewSet):
             )
 
         if actors:
-            actor_names = [a.strip() for a in actors.split(",") if a.strip()]
+            actor_names = [
+                a.strip()
+                for a in actors.split(",")
+                if a.strip()
+            ]
+
             q_objects = Q()
+
             for actor_name in actor_names:
                 q_objects |= (
-                        Q(actors__first_name__icontains=actor_name) |
-                        Q(actors__last_name__icontains=actor_name)
+                    Q(actors__first_name__icontains=actor_name)
+                    | Q(actors__last_name__icontains=actor_name)
                 )
+
             queryset = queryset.filter(q_objects)
 
         if self.action in ("list", "retrieve"):
@@ -121,7 +128,8 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
                 tickets_available=(
                     F("cinema_hall__rows")
                     * F("cinema_hall__seats_in_row")
-                ) - Count("tickets")
+                    - Count("tickets")
+                )
             )
 
         if self.action == "retrieve":
