@@ -5,6 +5,7 @@ from django.db.models import (
     QuerySet,
 )
 from rest_framework import viewsets
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 
 from cinema.models import (
@@ -29,24 +30,33 @@ from cinema.serializers import (
 )
 
 
+class DefaultPagination(LimitOffsetPagination):
+    default_limit = 10
+    max_limit = 100
+
+
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    pagination_class = DefaultPagination
 
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    pagination_class = DefaultPagination
 
 
 class CinemaHallViewSet(viewsets.ModelViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    pagination_class = DefaultPagination
 
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self) -> QuerySet:
         queryset = self.queryset
@@ -81,6 +91,7 @@ class MovieViewSet(viewsets.ModelViewSet):
 class MovieSessionViewSet(viewsets.ModelViewSet):
     queryset = MovieSession.objects.all()
     serializer_class = MovieSessionSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self) -> QuerySet:
         queryset = self.queryset
@@ -88,7 +99,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         movie_id = self.request.query_params.get("movie")
 
         if date:
-            queryset = queryset.filter(show_time__date=date)
+            queryset = queryset.filter(show_time=date)
         if movie_id:
             queryset = queryset.filter(movie_id=movie_id)
 
@@ -121,6 +132,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     serializer_class = OrdersSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = DefaultPagination
 
     def get_queryset(self) -> QuerySet:
         return Order.objects.filter(user=self.request.user).prefetch_related(
