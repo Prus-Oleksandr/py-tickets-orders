@@ -43,14 +43,20 @@ class MovieViewSet(viewsets.ModelViewSet):
 
         if title:
             queryset = queryset.filter(title__icontains=title)
+
         if genres:
-            queryset = queryset.filter(genres__name__in=genres.split(","))
+            genre_list = genres.split(",")
+            queryset = queryset.filter(genres__name__in=genre_list)
+
         if actors:
-            for actor in actors.split(","):
-                queryset = queryset.filter(
-                    Q(actors__first_name__icontains=actor)
-                    | Q(actors__last_name__icontains=actor)
+            actor_list = actors.split(",")
+            q_objects = Q()
+            for actor in actor_list:
+                q_objects |= (
+                        Q(actors__first_name__icontains=actor)
+                        | Q(actors__last_name__icontains=actor)
                 )
+            queryset = queryset.filter(q_objects)
 
         if self.action in ("list", "retrieve"):
             queryset = queryset.prefetch_related("genres", "actors")
@@ -84,8 +90,8 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
                 "movie", "cinema_hall"
             ).annotate(
                 tickets_available=(
-                    F("cinema_hall__rows") * F("cinema_hall__seats_in_row")
-                    - Count("tickets")
+                        F("cinema_hall__rows") * F("cinema_hall__seats_in_row")
+                        - Count("tickets")
                 )
             )
         if self.action == "retrieve":
