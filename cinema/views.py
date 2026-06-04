@@ -1,9 +1,6 @@
 from typing import Any
-from django.db.models import (
-    Count,
-    F,
-    QuerySet,
-)
+
+from django.db.models import Count, F, QuerySet
 from rest_framework import viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
@@ -102,8 +99,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
                 "cinema_hall",
             ).annotate(
                 tickets_available=(
-                    F("cinema_hall__rows")
-                    * F("cinema_hall__seats_in_row")
+                    F("cinema_hall__rows") * F("cinema_hall__seats_in_row")
                     - Count("tickets")
                 )
             )
@@ -131,6 +127,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie",
+        "tickets__movie_session__cinema_hall",
     )
     serializer_class = OrdersSerializer
     pagination_class = OrderPagination
@@ -141,6 +138,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             user=self.request.user,
         ).prefetch_related(
             "tickets__movie_session__movie",
+            "tickets__movie_session__cinema_hall",
         )
 
     def perform_create(self, serializer: Any) -> None:
