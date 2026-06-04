@@ -6,6 +6,7 @@ from django.db.models import (
     QuerySet,
 )
 from rest_framework import viewsets
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 
 from cinema.models import (
@@ -127,11 +128,15 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
+    class OrderPagination(LimitOffsetPagination):
+        default_limit = 10
+        max_limit = 100
+
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie"
     )
     serializer_class = OrdersSerializer
-    permission_classes = [IsAuthenticated]
+    pagination_class = OrderPagination
 
     def get_queryset(self) -> QuerySet:
         return Order.objects.filter(
